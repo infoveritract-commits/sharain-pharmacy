@@ -1161,7 +1161,7 @@ html[dir="rtl"] .cart-drawer{right:auto;left:0;transform:translateX(-100%)}
 <!-- HERO -->
 <section id="hero" aria-label="Hero">
   <div class="hero-stage">
-    <video id="hero-canvas" src="Sharain_pharmacy_product_film_1080p_20261007214658.mp4" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" muted playsinline preload="auto"></video>
+    <video id="hero-canvas" src="Sharain_pharmacy_product_film_1080p_20261007214658.mp4" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" autoplay loop muted playsinline></video>
     <div class="hero-content">
       <p class="label hero-label" data-i18n="heroLabel">NATURAL PHARMACY</p>
       <h1 class="hero-h1" data-i18n="heroH1">Nature, trusted<br>by science.</h1>
@@ -2507,10 +2507,6 @@ function setupAnimations() {
           
           if(self.progress > 0.05) gsap.to('.scroll-cue', { opacity: 0, duration: 0.3, overwrite: true });
           else gsap.to('.scroll-cue', { opacity: 1, duration: 0.3, overwrite: true });
-          
-          if (video.duration) {
-            video.currentTime = self.progress * video.duration;
-          }
         }
       }
     });
