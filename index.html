@@ -1161,7 +1161,7 @@ html[dir="rtl"] .cart-drawer{right:auto;left:0;transform:translateX(-100%)}
 <!-- HERO -->
 <section id="hero" aria-label="Hero">
   <div class="hero-stage">
-    <canvas id="hero-canvas" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></canvas>
+    <video id="hero-canvas" src="Sharain_pharmacy_product_film_1080p_20261007214658.mp4" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" muted playsinline preload="auto"></video>
     <div class="hero-content">
       <p class="label hero-label" data-i18n="heroLabel">NATURAL PHARMACY</p>
       <h1 class="hero-h1" data-i18n="heroH1">Nature, trusted<br>by science.</h1>
@@ -2469,79 +2469,32 @@ function initLenis() {
   gsap.ticker.lagSmoothing(0, 0);
 }
 
-const heroFrames = [];
-
 function initPreloader() {
-  const line = document.getElementById('load-fill');
   const preloader = document.getElementById('preloader');
   preloader.classList.add('active');
-
-  const video = document.createElement('video');
-  video.muted = true;
-  video.playsInline = true;
-  video.src = 'Sharain_pharmacy_product_film_1080p_20261007214658.mp4';
+  const video = document.getElementById('hero-canvas');
   
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  
-  let fallbackTimer = setTimeout(() => {
+  const onReady = () => {
     preloader.classList.add('done');
     setupAnimations();
-  }, 45000); // Increased to 45s to allow for longer video extraction
-
-  video.addEventListener('loadedmetadata', () => {
-    canvas.width = video.videoWidth || 1920;
-    canvas.height = video.videoHeight || 1080;
-    
-    // We can use 24fps or scale it slightly if it's super long.
-    // To ensure the whole video is captured without running out of RAM, we'll stick to 20fps which is still very smooth for scroll scrubbing.
-    const fps = 20; 
-    const totalFrames = Math.floor(video.duration * fps);
-    let currentFrame = 0;
-    
-    const extractNext = () => {
-      if (currentFrame >= totalFrames) { 
-        clearTimeout(fallbackTimer);
-        preloader.classList.add('done');
-        setupAnimations();
-        return;
-      }
-      video.currentTime = currentFrame / fps;
-    };
-    
-    video.addEventListener('seeked', () => {
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const img = new Image();
-      img.src = canvas.toDataURL('image/jpeg', 0.5); // good compression
-      heroFrames.push(img);
-      currentFrame++;
-      line.style.width = ((currentFrame / totalFrames) * 100) + '%';
-      extractNext();
-    });
-    
-    extractNext();
-  });
+  };
   
-  video.addEventListener('error', () => {
-    clearTimeout(fallbackTimer);
-    preloader.classList.add('done');
-    setupAnimations();
-  });
+  if (video && video.readyState >= 3) {
+    onReady();
+  } else if (video) {
+    video.addEventListener('loadeddata', onReady);
+    setTimeout(onReady, 3000); // fallback
+  } else {
+    onReady();
+  }
 }
 
 function setupAnimations() {
   gsap.set('.hero-label, .hero-h1, .hero-sub, .hero-cta', { opacity: 0, y: 40 });
   gsap.to('.scroll-cue', { opacity: 1, duration: 1, delay: 1.5 });
 
-  const canvas = document.getElementById('hero-canvas');
-  if(canvas && heroFrames.length > 0) {
-    const ctx = canvas.getContext('2d');
-    canvas.width = heroFrames[0].width;
-    canvas.height = heroFrames[0].height;
-    ctx.drawImage(heroFrames[0], 0, 0);
-
-    let frameProxy = { frame: 0 };
-    
+  const video = document.getElementById('hero-canvas');
+  if(video) {
     const heroTl = gsap.timeline({
       scrollTrigger: {
         trigger: '#hero',
@@ -2554,19 +2507,13 @@ function setupAnimations() {
           
           if(self.progress > 0.05) gsap.to('.scroll-cue', { opacity: 0, duration: 0.3, overwrite: true });
           else gsap.to('.scroll-cue', { opacity: 1, duration: 0.3, overwrite: true });
+          
+          if (video.duration) {
+            video.currentTime = self.progress * video.duration;
+          }
         }
       }
     });
-
-    heroTl.to(frameProxy, {
-      frame: heroFrames.length - 1,
-      snap: 'frame',
-      ease: 'none',
-      duration: 1,
-      onUpdate: () => {
-        ctx.drawImage(heroFrames[frameProxy.frame], 0, 0);
-      }
-    }, 0);
 
     heroTl.to('.hero-label', { opacity: 1, y: 0, duration: 0.05, ease: 'power2.out' }, 0.75)
           .to('.hero-h1', { opacity: 1, y: 0, duration: 0.08, ease: 'power2.out' }, 0.77)
